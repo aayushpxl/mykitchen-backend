@@ -1,66 +1,81 @@
-const User = require("../models/User");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const authService = require("../services/auth.service");
+const { RegisterDTO, LoginDTO, UserResponseDTO } = require("../dtos/auth.dto");
 
 // REGISTER
 exports.register = async (req, res) => {
-  const { username, email, password } = req.body;
-
-  if (!username || !email || !password) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
   try {
-    const exists = await User.findOne({ $or: [{ email }, { username }] });
-    if (exists) {
-      return res.status(400).json({ message: "User already exists" });
+    // 1. Validation (DTO)
+    const validation = RegisterDTO.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        message: "Validation Error",
+        errors: validation.error.flatten()
+      });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // 2. Service Call
+    const newUser = await authService.register(validation.data);
 
-    await User.create({
-      username,
-      email,
-      password: hashedPassword
+    // 3. Response DTO
+    res.status(201).json({
+      message: "User registered successfully",
     });
-
-    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
+    // Handle Service Errors (Business Logic Errors)
+    if (error.message.includes("exists")) {
+      return res.status(400).json({ message: error.message });
+    }
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
 // LOGIN
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: "Missing fields" });
-  }
-
   try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "User not found" });
+    const validation = LoginDTO.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        message: "Validation Error",
+        errors: validation.error.flatten()
+      });
+    }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    const { user, token } = await authService.login(validation.data);
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    // Clean User Object for Response
+    const userResponse = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role
+    };
 
     res.json({
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      },
+      user: userResponse,
       token
     });
   } catch (error) {
+    if (error.message === "Invalid credentials") {
+      return res.status(400).json({ message: error.message });
+    }
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
+};
+
+// GET ME
+exports.getMe = (req, res) => {
+  const user = req.user;
+  if (!user) return res.status(401).json({ message: "Not authenticated" });
+
+  res.json({
+    success: true,
+    user: {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role
+    }
+  });
 };
