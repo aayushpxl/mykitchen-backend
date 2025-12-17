@@ -20,6 +20,10 @@ app.use(express.json());
 connectDB();
 
 // Routes
-app.use("/api/auth", require("./routes/authRoutes"));
+const authRoutes = require("./routes/authRoutes");
+const recipeRoutes = require("./routes/recipeRoutes");
+
+app.use("/api/auth", authRoutes);
+app.use("/api/recipes", recipeRoutes);
 
 module.exports = app;

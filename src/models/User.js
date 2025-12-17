@@ -21,7 +21,8 @@ const UserSchema = new mongoose.Schema(
     role: {
       type: String,
       default: "normal"
-    }
+    },
+    savedRecipes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }]
   },
   { timestamps: true }
 );

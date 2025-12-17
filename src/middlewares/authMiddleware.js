@@ -1,8 +1,27 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-// AUTHENTICATE USER
-exports.authenticateUser = async (req, res, next) => {
+// OPTIONAL AUTH (Guest or User)
+const optionalAuth = async (req, res, next) => {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
+    req.user = await User.findById(decoded.id).select("-password");
+    next();
+  } catch (error) {
+    // If token invalid, treat as guest
+    req.user = null;
+    next();
+  }
+};
+
+// AUTHENTICATE USER (Strict)
+const authenticateUser = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -15,7 +34,7 @@ exports.authenticateUser = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
 
     const user = await User.findById(decoded.id);
 
@@ -37,7 +56,7 @@ exports.authenticateUser = async (req, res, next) => {
 };
 
 // ADMIN ONLY
-exports.isAdmin = (req, res, next) => {
+const isAdmin = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
     next();
   } else {
@@ -49,7 +68,7 @@ exports.isAdmin = (req, res, next) => {
 };
 
 // NORMAL USER ONLY
-exports.isUser = (req, res, next) => {
+const isUser = (req, res, next) => {
   if (req.user && req.user.role === "normal") {
     next();
   } else {
@@ -59,3 +78,5 @@ exports.isUser = (req, res, next) => {
     });
   }
 };
+
+module.exports = { authenticateUser, optionalAuth, isAdmin, isUser };
