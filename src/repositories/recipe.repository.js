@@ -7,11 +7,11 @@ class RecipeRepository {
     }
 
     async findAll(filter = {}) {
-        return await Recipe.find(filter).populate("author", "username email");
+        return await Recipe.find(filter).populate("createdBy", "username email");
     }
 
     async findById(id) {
-        return await Recipe.findById(id).populate("author", "username email");
+        return await Recipe.findById(id).populate("createdBy", "username email");
     }
 
     async update(id, updates) {

@@ -25,14 +25,12 @@ class RecipeService {
     async createRecipe(data, user) {
         return await recipeRepository.create({
             ...data,
-            author: user._id
+            createdBy: user._id,
+            createdByRole: user.role || 'user'
         });
     }
 
     async getAllRecipes() {
-        // Public list (everyone can see previews)
-        // We might want to limit fields here for performance, but for now full object is fine
-        // as the frontend will decide what to show on the card.
         return await recipeRepository.findAll();
     }
 
@@ -40,29 +38,27 @@ class RecipeService {
         const recipe = await recipeRepository.findById(id);
         if (!recipe) throw new Error("Recipe not found");
 
+        const recipeObj = recipe.toObject();
+
         // GUEST PROTECTION LOGIC
         if (!user) {
             // Mask content for guests
-            // We return a "preview" version
             return {
-                _id: recipe._id,
-                title: recipe.title,
-                description: recipe.description,
-                image: recipe.image,
-                time: recipe.time,
-                difficulty: recipe.difficulty,
-                calories: recipe.calories,
-                category: recipe.category,
-                author: recipe.author,
-                isLocked: true, // Frontend uses this to show "Login to View"
+                _id: recipeObj._id,
+                title: recipeObj.title,
+                description: recipeObj.description,
+                image: recipeObj.image,
+                nutrition: recipeObj.nutrition,
+                createdBy: recipeObj.createdBy,
+                isLocked: true,
                 ingredients: [], // Hidden
-                instructions: [] // Hidden
+                steps: [] // Hidden
             };
         }
 
         // Logged-in user sees full content
         return {
-            ...recipe.toObject(),
+            ...recipeObj,
             isLocked: false
         };
     }

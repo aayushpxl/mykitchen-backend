@@ -2,30 +2,27 @@ const mongoose = require("mongoose");
 
 const RecipeSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    description: { type: String, required: true },
-    image: { type: String, required: true }, // URL
-    time: { type: Number, required: true }, // in minutes
-    difficulty: {
-        type: String,
-        enum: ["Easy", "Medium", "Hard"],
-        default: "Medium"
-    },
-    calories: { type: Number },
-    category: { type: String, required: true }, // e.g., "Breakfast", "Pizza", "Vegan"
-
-    // Full Content (Protected for Guests)
+    description: { type: String },
+    image: { type: String },
     ingredients: [{
-        name: { type: String, required: true },
-        amount: { type: String }, // e.g., "2 cups"
+        name: { type: String },
+        quantity: { type: String },
+        unit: { type: String }
     }],
-    instructions: [{ type: String, required: true }],
-
-    author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-
-    // Social
-    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }], // Future implementation
-
+    steps: [{ type: String }],
+    nutrition: {
+        calories: { type: String },
+        protein: { type: String },
+        carbs: { type: String },
+        fat: { type: String }
+    },
+    substitutes: [{
+        ingredient: { type: String },
+        alternatives: [{ type: String }]
+    }],
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    createdByRole: { type: String, enum: ["admin", "user"] },
+    isPublished: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now }
 });
 
