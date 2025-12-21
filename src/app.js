@@ -4,6 +4,7 @@ const connectDB = require("./config/db");
 
 const app = express();
 
+
 // ✅ CORS FIRST (this handles preflight automatically)
 app.use(
   cors({
@@ -22,8 +23,9 @@ connectDB();
 // Routes
 const authRoutes = require("./routes/authRoutes");
 const recipeRoutes = require("./routes/recipeRoutes");
+const challengeRoutes = require("./routes/challengeRoutes")
 
 app.use("/api/auth", authRoutes);
 app.use("/api/recipes", recipeRoutes);
-
+app.use("/api/challenges", challengeRoutes);
 module.exports = app;
