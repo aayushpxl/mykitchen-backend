@@ -5,6 +5,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const recipeRoutes = require("./routes/recipeRoutes");
 const challengeRoutes = require("./routes/challengeRoutes");
+const mealPlanRoutes = require("./routes/mealplannerRoute")
 
 const app = express();
 
@@ -27,5 +28,6 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/recipes", recipeRoutes);
 app.use("/api/challenges", challengeRoutes);
+app.use("/api/meal-plans", mealPlanRoutes);
 
 module.exports = app; // <- CommonJS
