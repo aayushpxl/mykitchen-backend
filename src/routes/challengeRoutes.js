@@ -1,26 +1,31 @@
 const express = require("express");
-const router = express.Router();
-
 const {
   createChallenge,
-  getAllChallenges,
-  getMyChallenges,
+  getAllChallengesAdmin,
+  updateChallenge,
+  deleteChallenge,
+  getActiveChallenges,
   joinChallenge,
+  getMyChallenges,
   completeChallenge,
-} = require("../controllers/challengeController");
+  getChallengeById
+} = require("../controllers/challengeController.js");
 
-const {
-  authenticateUser,
-  isAdmin
-} = require("../middlewares/authMiddleware");
+const { authenticateUser, isAdmin, isUser } = require("../middlewares/authMiddleware.js");
 
-/* logged-in users */
-router.get("/", authenticateUser, getAllChallenges);
+const router = express.Router();
+
+/* ADMIN */
+router.post("/",  authenticateUser, createChallenge);
+router.get("/admin", authenticateUser, getAllChallengesAdmin);
+router.put("/:id",  authenticateUser, updateChallenge);
+router.delete("/:id",  authenticateUser, deleteChallenge);
+
+/* USER */
+router.get("/", getActiveChallenges);
+router.post("/:challengeId/join", joinChallenge);
 router.get("/my", authenticateUser, getMyChallenges);
-router.post("/:challengeId/join", authenticateUser, joinChallenge);
-router.patch("/complete/:id", authenticateUser, completeChallenge);
-
-/* admin only */
-router.post("/", authenticateUser, isAdmin, createChallenge);
+router.put("/complete/:id", authenticateUser, completeChallenge);
+router.get("/:id", getChallengeById);
 
 module.exports = router;

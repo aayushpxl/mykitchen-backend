@@ -1,7 +1,11 @@
 import Challenge from "../models/Challenge.js";
 import UserChallenge from "../models/UserChallenge.js";
 
-/* ADMIN */
+/* ===========================
+   ADMIN CONTROLLERS
+=========================== */
+
+// Create challenge
 export const createChallenge = async (req, res) => {
   try {
     const challenge = await Challenge.create({
@@ -15,28 +19,61 @@ export const createChallenge = async (req, res) => {
   }
 };
 
-export const getAllChallenges = async (req, res) => {
+// Get all challenges (admin)
+export const getAllChallengesAdmin = async (req, res) => {
   try {
-    const challenges = await Challenge.find({ isActive: true });
+    const challenges = await Challenge.find().populate("recipe");
     res.json(challenges);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch challenges" });
   }
 };
 
-/* USER */
+// Update challenge
+export const updateChallenge = async (req, res) => {
+  try {
+    const challenge = await Challenge.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json(challenge);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update challenge" });
+  }
+};
+
+// Delete challenge
+export const deleteChallenge = async (req, res) => {
+  try {
+    await Challenge.findByIdAndDelete(req.params.id);
+    res.json({ message: "Challenge deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete challenge" });
+  }
+};
+
+
+
+// Public / logged-in users
+export const getActiveChallenges = async (req, res) => {
+  try {
+    // We removed the startDate/endDate restriction so you can see upcoming challenges
+    const challenges = await Challenge.find({
+      isActive: true
+    }).populate("recipe");
+
+    res.json(challenges);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch challenges" });
+  }
+};
+
+// Join challenge
 export const joinChallenge = async (req, res) => {
   try {
     const { challengeId } = req.params;
-
-    const alreadyJoined = await UserChallenge.findOne({
-      user: req.user.id,
-      challenge: challengeId
-    });
-
-    if (alreadyJoined) {
-      return res.status(400).json({ message: "Already joined" });
-    }
 
     const join = await UserChallenge.create({
       user: req.user.id,
@@ -45,15 +82,22 @@ export const joinChallenge = async (req, res) => {
 
     res.status(201).json(join);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Already joined" });
+    }
     res.status(500).json({ message: "Failed to join challenge" });
   }
 };
 
+// Get logged-in user's challenges
 export const getMyChallenges = async (req, res) => {
   try {
     const myChallenges = await UserChallenge.find({
       user: req.user.id
-    }).populate("challenge");
+    }).populate({
+      path: "challenge",
+      populate: { path: "recipe" }
+    });
 
     res.json(myChallenges);
   } catch (error) {
@@ -61,19 +105,46 @@ export const getMyChallenges = async (req, res) => {
   }
 };
 
+// Complete challenge
 export const completeChallenge = async (req, res) => {
   try {
-    const { id } = req.params;
+    const challenge = await UserChallenge.findById(req.params.id)
+      .populate("challenge");
 
-    const challenge = await UserChallenge.findById(id);
-    if (!challenge) return res.status(404).json({ message: "Not found" });
+    if (!challenge) {
+      return res.status(404).json({ message: "Challenge not found" });
+    }
+
+    if (challenge.status === "completed") {
+      return res.status(400).json({ message: "Already completed" });
+    }
 
     challenge.status = "completed";
     challenge.progress = 100;
+    challenge.completedAt = new Date();
+
     await challenge.save();
+
+   
 
     res.json(challenge);
   } catch (error) {
     res.status(500).json({ message: "Failed to complete challenge" });
+  }
+};
+// Add this to challengeController.js
+export const getChallengeById = async (req, res) => {
+  try {
+    const challenge = await Challenge.findById(req.params.id)
+      .populate("recipe") // Vital: This gets the instructions for the detail page
+      .populate("createdBy", "username");
+
+    if (!challenge) {
+      return res.status(404).json({ message: "Challenge not found" });
+    }
+
+    res.json(challenge);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch challenge details" });
   }
 };

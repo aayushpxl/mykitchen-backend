@@ -2,26 +2,59 @@ import mongoose from "mongoose";
 
 const challengeSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    description: String,
-
-    type: {
+    title: {
       type: String,
-      enum: ["daily", "weekly"],
       required: true,
+      trim: true
     },
 
-    rewardPoints: { type: Number, default: 0 },
-    badge: String,
+    description: {
+      type: String,
+      required: true
+    },
 
-    startDate: Date,
-    endDate: Date,
+    recipe: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Recipe",
+      required: true
+    },
 
-    isActive: { type: Boolean, default: true },
+    badge: {
+      name: { type: String, required: true },
+      icon: { type: String } // emoji or image url
+    },
 
-    recipes: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }
-    ],
+    points: {
+      type: Number,
+      default: 50
+    },
+
+    scheduleType: {
+      type: String,
+      enum: ["daily", "weekly"],
+      required: true
+    },
+
+    startDate: {
+      type: Date,
+      required: true
+    },
+
+    endDate: {
+      type: Date,
+      required: true
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    }
   },
   { timestamps: true }
 );

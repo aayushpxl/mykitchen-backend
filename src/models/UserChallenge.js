@@ -5,28 +5,37 @@ const userChallengeSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: true
     },
 
     challenge: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Challenge",
-      required: true,
+      required: true
     },
 
-    completed: {
-      type: Boolean,
-      default: false,
+    status: {
+      type: String,
+      enum: ["joined", "completed"],
+      default: "joined"
     },
+    badges: [
+  {
+    name: String,
+    icon: String,
+    earnedAt: Date
+  }
+],
+
+points: {
+  type: Number,
+  default: 0
+},
 
     completedAt: {
-      type: Date,
-    },
-
-    earnedPoints: {
-      type: Number,
-      default: 0,
-    },
+      type: Date
+    }
+    
   },
   { timestamps: true }
 );
