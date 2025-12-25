@@ -1,12 +1,12 @@
-import Challenge from "../models/Challenge.js";
-import UserChallenge from "../models/UserChallenge.js";
+const Challenge = require("../models/Challenge");
+const UserChallenge = require("../models/UserChallenge");
 
 /* ===========================
    ADMIN CONTROLLERS
 =========================== */
 
 // Create challenge
-export const createChallenge = async (req, res) => {
+exports.createChallenge = async (req, res) => {
   try {
     const challenge = await Challenge.create({
       ...req.body,
@@ -20,7 +20,7 @@ export const createChallenge = async (req, res) => {
 };
 
 // Get all challenges (admin)
-export const getAllChallengesAdmin = async (req, res) => {
+exports.getAllChallengesAdmin = async (req, res) => {
   try {
     const challenges = await Challenge.find().populate("recipe");
     res.json(challenges);
@@ -30,7 +30,7 @@ export const getAllChallengesAdmin = async (req, res) => {
 };
 
 // Update challenge
-export const updateChallenge = async (req, res) => {
+exports.updateChallenge = async (req, res) => {
   try {
     const challenge = await Challenge.findByIdAndUpdate(
       req.params.id,
@@ -45,7 +45,7 @@ export const updateChallenge = async (req, res) => {
 };
 
 // Delete challenge
-export const deleteChallenge = async (req, res) => {
+exports.deleteChallenge = async (req, res) => {
   try {
     await Challenge.findByIdAndDelete(req.params.id);
     res.json({ message: "Challenge deleted" });
@@ -57,7 +57,7 @@ export const deleteChallenge = async (req, res) => {
 
 
 // Public / logged-in users
-export const getActiveChallenges = async (req, res) => {
+exports.getActiveChallenges = async (req, res) => {
   try {
     // We removed the startDate/endDate restriction so you can see upcoming challenges
     const challenges = await Challenge.find({
@@ -71,7 +71,7 @@ export const getActiveChallenges = async (req, res) => {
 };
 
 // Join challenge
-export const joinChallenge = async (req, res) => {
+exports.joinChallenge = async (req, res) => {
   try {
     const { challengeId } = req.params;
 
@@ -90,7 +90,7 @@ export const joinChallenge = async (req, res) => {
 };
 
 // Get logged-in user's challenges
-export const getMyChallenges = async (req, res) => {
+exports.getMyChallenges = async (req, res) => {
   try {
     const myChallenges = await UserChallenge.find({
       user: req.user.id
@@ -106,7 +106,7 @@ export const getMyChallenges = async (req, res) => {
 };
 
 // Complete challenge
-export const completeChallenge = async (req, res) => {
+exports.completeChallenge = async (req, res) => {
   try {
     const challenge = await UserChallenge.findById(req.params.id)
       .populate("challenge");
@@ -125,7 +125,7 @@ export const completeChallenge = async (req, res) => {
 
     await challenge.save();
 
-   
+
 
     res.json(challenge);
   } catch (error) {
@@ -133,7 +133,7 @@ export const completeChallenge = async (req, res) => {
   }
 };
 // Add this to challengeController.js
-export const getChallengeById = async (req, res) => {
+exports.getChallengeById = async (req, res) => {
   try {
     const challenge = await Challenge.findById(req.params.id)
       .populate("recipe") // Vital: This gets the instructions for the detail page

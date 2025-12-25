@@ -12,8 +12,6 @@ exports.getAllRecipes = async (req, res) => {
 
 exports.getRecipeById = async (req, res) => {
     try {
-        // req.user might be undefined if guest (middleware should optional-pass or we handle public routes separately)
-        // Actually, we'll make this route "optional auth" in middleware or check header manually if not using middleware
         const user = req.user;
         const recipe = await recipeService.getRecipeById(req.params.id, user);
         res.json(recipe);
@@ -33,6 +31,8 @@ exports.toggleSave = async (req, res) => {
 
 exports.createRecipe = async (req, res) => {
     try {
+        // Reuse create schema for now, or use a partial one if we want to allow partial updates (zod .partial())
+        // For verify strictly:
         const validation = CreateRecipeSchema.safeParse(req.body);
         if (!validation.success) {
             return res.status(400).json({ errors: validation.error.flatten() });
@@ -40,6 +40,25 @@ exports.createRecipe = async (req, res) => {
 
         const recipe = await recipeService.createRecipe(validation.data, req.user);
         res.status(201).json(recipe);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+exports.updateRecipe = async (req, res) => {
+    try {
+        // We can create a UpdateRecipeSchema later, for now allow partial updates based on body
+        const recipe = await recipeService.updateRecipe(req.params.id, req.body, req.user);
+        res.json(recipe);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+exports.deleteRecipe = async (req, res) => {
+    try {
+        await recipeService.deleteRecipe(req.params.id, req.user);
+        res.json({ message: "Recipe deleted" });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }

@@ -5,7 +5,8 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const recipeRoutes = require("./routes/recipeRoutes");
 const challengeRoutes = require("./routes/challengeRoutes");
-const mealPlanRoutes = require("./routes/mealplannerRoute")
+const mealPlanRoutes = require("./routes/mealplannerRoute");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -29,5 +30,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/recipes", recipeRoutes);
 app.use("/api/challenges", challengeRoutes);
 app.use("/api/meal-plans", mealPlanRoutes);
+app.use("/api/admin", adminRoutes);
 
 module.exports = app; // <- CommonJS

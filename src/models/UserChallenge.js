@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const userChallengeSchema = new mongoose.Schema(
   {
@@ -20,24 +20,24 @@ const userChallengeSchema = new mongoose.Schema(
       default: "joined"
     },
     badges: [
-  {
-    name: String,
-    icon: String,
-    earnedAt: Date
-  }
-],
+      {
+        name: String,
+        icon: String,
+        earnedAt: Date
+      }
+    ],
 
-points: {
-  type: Number,
-  default: 0
-},
+    points: {
+      type: Number,
+      default: 0
+    },
 
     completedAt: {
       type: Date
     }
-    
+
   },
   { timestamps: true }
 );
 
-export default mongoose.model("UserChallenge", userChallengeSchema);
+module.exports = mongoose.model("UserChallenge", userChallengeSchema);

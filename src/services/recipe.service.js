@@ -1,67 +1,75 @@
-const recipeRepository = require("../repositories/recipe.repository");
+const Recipe = require("../models/Recipe");
+const User = require("../models/User");
 
-const User = require("../models/User"); // Need User to update saved recipes
+exports.getAllRecipes = async () => {
+    return await Recipe.find().sort({ createdAt: -1 });
+};
 
-class RecipeService {
-    // ... existing methods (createRecipe, getAllRecipes) use implicit 'this' or are static-like. 
-    // Just appending method.
+exports.getRecipeById = async (id, user) => {
+    const recipe = await Recipe.findById(id).populate("createdBy", "username");
+    if (!recipe) throw new Error("Recipe not found");
 
-    async toggleSaveRecipe(recipeId, userId) {
-        const user = await User.findById(userId);
-        if (!user) throw new Error("User not found");
-
-        const isSaved = user.savedRecipes.includes(recipeId);
-
-        if (isSaved) {
-            user.savedRecipes = user.savedRecipes.filter(id => id.toString() !== recipeId);
-        } else {
-            user.savedRecipes.push(recipeId);
+    let isSaved = false;
+    if (user) {
+        const dbUser = await User.findById(user._id);
+        if (dbUser && dbUser.savedRecipes.includes(id)) {
+            isSaved = true;
         }
-
-        await user.save();
-        return { isSaved: !isSaved };
     }
 
-    async createRecipe(data, user) {
-        return await recipeRepository.create({
-            ...data,
-            createdBy: user._id,
-            createdByRole: user.role || 'user'
-        });
+    return { ...recipe.toObject(), isSaved };
+};
+
+exports.createRecipe = async (data, user) => {
+    const newRecipe = new Recipe({
+        ...data,
+        createdBy: user._id,
+        createdByRole: user.role
+    });
+    return await newRecipe.save();
+};
+
+exports.toggleSaveRecipe = async (recipeId, userId) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    const index = user.savedRecipes.indexOf(recipeId);
+    let isSaved = false;
+
+    if (index === -1) {
+        user.savedRecipes.push(recipeId);
+        isSaved = true;
+    } else {
+        user.savedRecipes.splice(index, 1);
+        isSaved = false;
     }
 
-    async getAllRecipes() {
-        return await recipeRepository.findAll();
+    await user.save();
+    return { isSaved };
+};
+
+exports.updateRecipe = async (id, data, user) => {
+    const recipe = await Recipe.findById(id);
+    if (!recipe) throw new Error("Recipe not found");
+
+    // Only Admin or Creator can update
+    // We can rely on controller to passing the correct user, but good to check here too or in middleware
+    // For now assuming the controller ensures permissions or we just do it here
+    if (user.role !== 'admin' && recipe.createdBy.toString() !== user._id.toString()) {
+        throw new Error("Not authorized");
     }
 
-    async getRecipeById(id, user) {
-        const recipe = await recipeRepository.findById(id);
-        if (!recipe) throw new Error("Recipe not found");
+    Object.assign(recipe, data);
+    return await recipe.save();
+};
 
-        const recipeObj = recipe.toObject();
+exports.deleteRecipe = async (id, user) => {
+    const recipe = await Recipe.findById(id);
+    if (!recipe) throw new Error("Recipe not found");
 
-        // GUEST PROTECTION LOGIC
-        if (!user) {
-            // Mask content for guests
-            return {
-                _id: recipeObj._id,
-                title: recipeObj.title,
-                description: recipeObj.description,
-                image: recipeObj.image,
-                nutrition: recipeObj.nutrition,
-                createdBy: recipeObj.createdBy,
-                isLocked: true,
-                ingredients: [], // Hidden
-                steps: [] // Hidden
-            };
-        }
-
-        // Logged-in user sees full content
-        return {
-            ...recipeObj,
-            isLocked: false
-        };
+    if (user.role !== 'admin' && recipe.createdBy.toString() !== user._id.toString()) {
+        throw new Error("Not authorized");
     }
-}
 
-module.exports = new RecipeService();
+    return await Recipe.findByIdAndDelete(id);
+};
