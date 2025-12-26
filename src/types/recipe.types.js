@@ -15,6 +15,10 @@ const CreateRecipeSchema = z.object({
     status: z.enum(["pending", "approved", "rejected", "private"]).optional(),
     ingredients: z.array(IngredientSchema).min(1, "At least one ingredient required"),
     steps: z.array(z.string().min(1)).min(1, "At least one step required"),
+    category: z.string().optional().or(z.literal('')),
+    tags: z.array(z.string()).optional(),
+    servings: z.number().optional().or(z.string().transform(val => val === '' ? undefined : Number(val))).optional(),
+    proTips: z.array(z.string()).optional(),
     nutrition: z.object({
         calories: z.string().optional(),
         protein: z.string().optional(),

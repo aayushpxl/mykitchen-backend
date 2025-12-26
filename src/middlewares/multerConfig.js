@@ -2,9 +2,9 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-const storage = multer.diskStorage({
+const storage = (folder) => multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadPath = path.join(process.cwd(), "uploads", "profile");
+        const uploadPath = path.join(process.cwd(), "uploads", folder);
         if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
         }
@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        cb(null, "profile-" + uniqueSuffix + path.extname(file.originalname));
+        cb(null, `${folder}-${uniqueSuffix}${path.extname(file.originalname)}`);
     },
 });
 
@@ -24,10 +24,13 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-const upload = multer({
-    storage: storage,
+const createUpload = (folder) => multer({
+    storage: storage(folder),
     fileFilter: fileFilter,
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
-module.exports = upload;
+module.exports = {
+    profileUpload: createUpload("profile"),
+    recipeUpload: createUpload("recipes")
+};

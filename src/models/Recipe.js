@@ -6,6 +6,9 @@ const RecipeSchema = new mongoose.Schema({
     image: { type: String },
     cookingTime: { type: String }, // e.g., "30 mins"
     difficulty: { type: String, enum: ["Easy", "Medium", "Hard"] },
+    category: { type: String },
+    tags: [{ type: String }],
+    servings: { type: Number },
     ingredients: [{
         name: { type: String },
         quantity: { type: String },
@@ -22,6 +25,7 @@ const RecipeSchema = new mongoose.Schema({
         ingredient: { type: String },
         alternatives: [{ type: String }]
     }],
+    proTips: [{ type: String }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     createdByRole: { type: String, enum: ["admin", "user", "normal"] },
     status: {

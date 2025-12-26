@@ -35,9 +35,26 @@ exports.toggleSave = async (req, res) => {
 
 exports.createRecipe = async (req, res) => {
     try {
-        // Reuse create schema for now, or use a partial one if we want to allow partial updates (zod .partial())
-        // For verify strictly:
-        const validation = CreateRecipeSchema.safeParse(req.body);
+        let recipeData = { ...req.body };
+
+        // 1. Handle File Upload
+        if (req.file) {
+            recipeData.image = `/uploads/recipes/${req.file.filename}`;
+        }
+
+        // 2. Parse JSON fields (if sent via FormData)
+        ['ingredients', 'steps', 'tags', 'nutrition', 'substitutes', 'proTips'].forEach(field => {
+            if (typeof recipeData[field] === 'string') {
+                try {
+                    recipeData[field] = JSON.parse(recipeData[field]);
+                } catch (e) {
+                    console.warn(`Failed to parse ${field}:`, e.message);
+                }
+            }
+        });
+
+        // 3. Validation
+        const validation = CreateRecipeSchema.safeParse(recipeData);
         if (!validation.success) {
             return res.status(400).json({ errors: validation.error.flatten() });
         }
@@ -52,8 +69,25 @@ exports.createRecipe = async (req, res) => {
 
 exports.updateRecipe = async (req, res) => {
     try {
-        // We can create a UpdateRecipeSchema later, for now allow partial updates based on body
-        const recipe = await recipeService.updateRecipe(req.params.id, req.body, req.user);
+        let recipeData = { ...req.body };
+
+        // 1. Handle File Upload
+        if (req.file) {
+            recipeData.image = `/uploads/recipes/${req.file.filename}`;
+        }
+
+        // 2. Parse JSON fields
+        ['ingredients', 'steps', 'tags', 'nutrition', 'substitutes', 'proTips'].forEach(field => {
+            if (typeof recipeData[field] === 'string') {
+                try {
+                    recipeData[field] = JSON.parse(recipeData[field]);
+                } catch (e) {
+                    console.warn(`Failed to parse ${field}:`, e.message);
+                }
+            }
+        });
+
+        const recipe = await recipeService.updateRecipe(req.params.id, recipeData, req.user);
         res.json(recipe);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
@@ -107,6 +141,15 @@ exports.updateRecipeStatus = async (req, res) => {
         const { status, rejectionReason } = req.body;
         const recipe = await recipeService.updateRecipeStatus(req.params.id, status, rejectionReason);
         res.json(recipe);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+exports.getSavedRecipes = async (req, res) => {
+    try {
+        const recipes = await recipeService.getSavedRecipes(req.user._id);
+        res.json(recipes);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }

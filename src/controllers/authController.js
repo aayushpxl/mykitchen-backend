@@ -53,7 +53,8 @@ exports.login = async (req, res) => {
       phoneNumber: user.phoneNumber,
       bio: user.bio,
       location: user.location,
-      profilePic: user.profilePic
+      profilePic: user.profilePic,
+      savedRecipes: user.savedRecipes || []
     };
 
     res.json({
@@ -84,7 +85,8 @@ exports.getMe = (req, res) => {
       phoneNumber: user.phoneNumber,
       bio: user.bio,
       location: user.location,
-      profilePic: user.profilePic
+      profilePic: user.profilePic,
+      savedRecipes: user.savedRecipes || []
     }
   });
 };
@@ -138,7 +140,8 @@ exports.updateProfile = async (req, res) => {
         phoneNumber: user.phoneNumber,
         bio: user.bio,
         location: user.location,
-        profilePic: user.profilePic
+        profilePic: user.profilePic,
+        savedRecipes: user.savedRecipes || []
       }
     });
   } catch (error) {

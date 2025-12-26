@@ -58,7 +58,7 @@ const getUserRecipes = async (userId) => {
 
 // Get Public User Profile & Recipes
 const getPublicUserProfile = async (userId) => {
-    const user = await User.findById(userId).select("-password -email -role"); // Sensitive data exclusion
+    const user = await User.findById(userId).select("-password -email"); // Sensitive data exclusion (keep role, bio, location, etc.)
     if (!user) throw new Error("User not found");
 
     // Only show APPROVED recipes on public profile
@@ -130,6 +130,16 @@ const toggleSaveRecipe = async (recipeId, userId) => {
     return { isSaved: !isSaved };
 };
 
+// Get Saved Recipes for a user
+const getSavedRecipes = async (userId) => {
+    const user = await User.findById(userId).populate({
+        path: 'savedRecipes',
+        populate: { path: 'createdBy', select: 'username' }
+    });
+    if (!user) throw new Error("User not found");
+    return user.savedRecipes;
+};
+
 // Admin: Get all pending recipes
 const getPendingRecipes = async () => {
     return await Recipe.find({ status: "pending" }).populate("createdBy", "username").sort({ createdAt: 1 });
@@ -166,5 +176,6 @@ module.exports = {
     getUserRecipes,
     getPendingRecipes,
     updateRecipeStatus,
-    getPublicUserProfile
+    getPublicUserProfile,
+    getSavedRecipes
 };
