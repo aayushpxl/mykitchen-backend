@@ -10,17 +10,23 @@ const getAllRecipes = async (user, filters = {}) => {
         if (filters.status) {
             query.status = filters.status;
         } else {
-            // If admin but not filtering, maybe show approved? Or all?
-            // Existing behavior was just approved. Let's keep it unless specified.
-            // Actually, for admin dashboard we might want all. But let's respect filter if present.
-            delete query.status; // If admin and no filter, return all (or handle per requirement)
-            // But frontend home page hits this too. We shouldn't break home page for admin.
-            // If no filter, default to Approved to mimic public feed?
-            // Actually, let's keep status='approved' default unless filter is passed
+            delete query.status;
             if (!filters.status) {
                 query.status = "approved";
             }
         }
+    }
+
+    // Add Search Filters
+    if (filters.search) {
+        query.title = { $regex: filters.search, $options: 'i' };
+    }
+
+    if (filters.ingredients && filters.ingredients.length > 0) {
+        // Find recipes that contain ALL specified ingredients
+        query["ingredients.name"] = {
+            $all: filters.ingredients.map(ing => new RegExp(ing, 'i'))
+        };
     }
 
     let q = Recipe.find(query).populate("createdBy", "username").sort({ createdAt: -1 });
