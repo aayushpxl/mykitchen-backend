@@ -4,6 +4,8 @@ const RecipeSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String },
     image: { type: String },
+    cookingTime: { type: String }, // e.g., "30 mins"
+    difficulty: { type: String, enum: ["Easy", "Medium", "Hard"] },
     ingredients: [{
         name: { type: String },
         quantity: { type: String },
@@ -21,8 +23,13 @@ const RecipeSchema = new mongoose.Schema({
         alternatives: [{ type: String }]
     }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    createdByRole: { type: String, enum: ["admin", "user"] },
-    isPublished: { type: Boolean, default: true },
+    createdByRole: { type: String, enum: ["admin", "user", "normal"] },
+    status: {
+        type: String,
+        enum: ["pending", "approved", "rejected", "private"],
+        default: "pending"
+    },
+    rejectionReason: { type: String },
     createdAt: { type: Date, default: Date.now }
 });
 

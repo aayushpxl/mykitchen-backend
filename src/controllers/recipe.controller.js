@@ -3,7 +3,11 @@ const { CreateRecipeSchema } = require("../types/recipe.types");
 
 exports.getAllRecipes = async (req, res) => {
     try {
-        const recipes = await recipeService.getAllRecipes();
+        const { status, limit } = req.query;
+        // If query params exist, pass to service (which needs to handle them)
+        // Currently service.getAllRecipes() is hardcoded to "approved".
+        // functionality needs to be extended.
+        const recipes = await recipeService.getAllRecipes(req.user, { status, limit: parseInt(limit) });
         res.json(recipes);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
@@ -41,6 +45,7 @@ exports.createRecipe = async (req, res) => {
         const recipe = await recipeService.createRecipe(validation.data, req.user);
         res.status(201).json(recipe);
     } catch (error) {
+        console.error("Create Recipe Error:", error);
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
@@ -59,6 +64,49 @@ exports.deleteRecipe = async (req, res) => {
     try {
         await recipeService.deleteRecipe(req.params.id, req.user);
         res.json({ message: "Recipe deleted" });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+exports.getMyRecipes = async (req, res) => {
+    try {
+        const recipes = await recipeService.getUserRecipes(req.user._id);
+        res.json(recipes);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+exports.getUserProfile = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const profile = await recipeService.getPublicUserProfile(userId);
+        res.json(profile);
+    } catch (error) {
+        res.status(404).json({ message: "User not found" });
+    }
+};
+
+exports.getPendingRecipes = async (req, res) => {
+    try {
+        // Ensure admin
+        if (req.user.role !== 'admin') return res.status(403).json({ message: "Access denied" });
+
+        const recipes = await recipeService.getPendingRecipes();
+        res.json(recipes);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+exports.updateRecipeStatus = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') return res.status(403).json({ message: "Access denied" });
+
+        const { status, rejectionReason } = req.body;
+        const recipe = await recipeService.updateRecipeStatus(req.params.id, status, rejectionReason);
+        res.json(recipe);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }

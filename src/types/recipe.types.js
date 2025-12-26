@@ -7,11 +7,14 @@ const IngredientSchema = z.object({
 });
 
 const CreateRecipeSchema = z.object({
-    title: z.string().min(3, "Title too short"),
-    description: z.string().min(10, "Description too short"),
-    image: z.string().url("Invalid image URL"),
+    title: z.string().min(1, "Title is required"),
+    description: z.string().min(1, "Description is required"),
+    image: z.string().optional().or(z.literal('')), // Allow empty string or valid URL if needed, but relaxed for now
+    cookingTime: z.string().optional().or(z.literal('')),
+    difficulty: z.enum(["Easy", "Medium", "Hard"]).optional(),
+    status: z.enum(["pending", "approved", "rejected", "private"]).optional(),
     ingredients: z.array(IngredientSchema).min(1, "At least one ingredient required"),
-    steps: z.array(z.string().min(5)).min(1, "At least one step required"),
+    steps: z.array(z.string().min(1)).min(1, "At least one step required"),
     nutrition: z.object({
         calories: z.string().optional(),
         protein: z.string().optional(),

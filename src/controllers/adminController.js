@@ -22,6 +22,8 @@ const getDashboardStats = async (req, res) => {
             endDate: { $lt: new Date() }
         });
 
+        const pendingRecipes = await Recipe.countDocuments({ status: 'pending' });
+
         res.status(200).json({
             success: true,
             data: {
@@ -29,7 +31,8 @@ const getDashboardStats = async (req, res) => {
                 totalRecipes,
                 totalChallenges,
                 activeChallenges,
-                completedChallenges
+                completedChallenges,
+                pendingRecipes
             },
         });
     } catch (error) {
@@ -73,7 +76,50 @@ const getAllUsers = async (req, res) => {
     }
 };
 
+// @desc    Get User By ID
+// @route   GET /api/admin/users/:id
+// @access  Private/Admin
+const getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const completedChallenges = await UserChallenge.countDocuments({
+            user: user._id,
+            status: 'completed'
+        });
+        const joinedChallenges = await UserChallenge.countDocuments({
+            user: user._id
+        });
+
+        const publishedRecipes = await Recipe.countDocuments({
+            createdBy: user._id,
+            status: 'approved'
+        });
+
+        // Calculate total points
+        const challenges = await UserChallenge.find({ user: user._id });
+        const totalPoints = challenges.reduce((acc, curr) => acc + (curr.points || 0), 0);
+
+        const userWithStats = {
+            ...user.toObject(),
+            completedChallenges,
+            joinedChallenges,
+            publishedRecipes,
+            totalPoints
+        };
+
+        res.json(userWithStats);
+    } catch (error) {
+        console.error("Error fetching user details:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 module.exports = {
     getDashboardStats,
-    getAllUsers
+    getAllUsers,
+    getUserById
 };
