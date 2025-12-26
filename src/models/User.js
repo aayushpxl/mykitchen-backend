@@ -22,6 +22,21 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "normal"
     },
+    phoneNumber: {
+      type: String,
+      trim: true
+    },
+    bio: {
+      type: String,
+      trim: true
+    },
+    location: {
+      type: String,
+      trim: true
+    },
+    profilePic: {
+      type: String
+    },
     savedRecipes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }]
   },
   { timestamps: true }

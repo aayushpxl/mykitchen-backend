@@ -22,6 +22,10 @@ app.use(
 // JSON
 app.use(express.json());
 
+// Static Files
+const path = require("path");
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 // Database
 connectDB();
 
@@ -33,4 +37,14 @@ app.use("/api/meal-plans", mealPlanRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", require("./routes/userRoutes"));
 
-module.exports = app; // <- CommonJS
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("Global Error Handler:", err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined
+  });
+});
+
+module.exports = app;
