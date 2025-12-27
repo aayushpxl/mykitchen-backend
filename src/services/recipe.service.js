@@ -29,7 +29,10 @@ const getAllRecipes = async (user, filters = {}) => {
         };
     }
 
-    let q = Recipe.find(query).populate("createdBy", "username").sort({ createdAt: -1 });
+    let q = Recipe.find(query)
+        .populate("createdBy", "username")
+        .populate("reviews.user", "username profileImage")
+        .sort({ createdAt: -1 });
 
     if (filters.limit) {
         q = q.limit(filters.limit);
@@ -40,7 +43,9 @@ const getAllRecipes = async (user, filters = {}) => {
 
 // Get recipes by ID
 const getRecipeById = async (id, user) => {
-    const recipe = await Recipe.findById(id).populate("createdBy", "username");
+    const recipe = await Recipe.findById(id)
+        .populate("createdBy", "username profileImage")
+        .populate("reviews.user", "username profileImage");
     if (!recipe) throw new Error("Recipe not found");
 
     // Allow access if:
@@ -170,6 +175,44 @@ const updateRecipeStatus = async (id, status, rejectionReason) => {
     return await recipe.save();
 };
 
+const addReview = async (recipeId, userId, { rating, comment }) => {
+    const recipe = await Recipe.findById(recipeId);
+    if (!recipe) throw new Error("Recipe not found");
+
+    // Push new review
+    recipe.reviews.push({
+        user: userId,
+        rating,
+        comment
+    });
+
+    await recipe.save();
+
+    return await Recipe.findById(recipeId)
+        .populate("createdBy", "username profileImage")
+        .populate("reviews.user", "username profileImage");
+};
+
+const deleteReview = async (recipeId, reviewId, userId, userRole) => {
+    const recipe = await Recipe.findById(recipeId);
+    if (!recipe) throw new Error("Recipe not found");
+
+    const review = recipe.reviews.id(reviewId);
+    if (!review) throw new Error("Review not found");
+
+    // Only author or admin
+    if (review.user.toString() !== userId.toString() && userRole !== 'admin') {
+        throw new Error("Not authorized");
+    }
+
+    recipe.reviews.pull(reviewId);
+    await recipe.save();
+
+    return await Recipe.findById(recipeId)
+        .populate("createdBy", "username profileImage")
+        .populate("reviews.user", "username profileImage");
+};
+
 module.exports = {
     getAllRecipes,
     getRecipeById,
@@ -179,9 +222,9 @@ module.exports = {
     deleteRecipe,
     getUserRecipes,
     getPendingRecipes,
-    getUserRecipes,
-    getPendingRecipes,
     updateRecipeStatus,
     getPublicUserProfile,
-    getSavedRecipes
+    getSavedRecipes,
+    addReview,
+    deleteReview
 };

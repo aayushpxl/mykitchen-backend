@@ -26,6 +26,12 @@ const RecipeSchema = new mongoose.Schema({
         alternatives: [{ type: String }]
     }],
     proTips: [{ type: String }],
+    reviews: [{
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        rating: { type: Number, required: true, min: 1, max: 5 },
+        comment: { type: String },
+        createdAt: { type: Date, default: Date.now }
+    }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     createdByRole: { type: String, enum: ["admin", "user", "normal"] },
     status: {
@@ -36,5 +42,9 @@ const RecipeSchema = new mongoose.Schema({
     rejectionReason: { type: String },
     createdAt: { type: Date, default: Date.now }
 });
+
+// Middleware to populate user in reviews by default or similar could be handled in service
+// But let's add an index for faster queries if needed later
+RecipeSchema.index({ "reviews.user": 1 });
 
 module.exports = mongoose.model("Recipe", RecipeSchema);

@@ -154,3 +154,24 @@ exports.getSavedRecipes = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
+exports.createReview = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { rating, comment } = req.body;
+        const review = await recipeService.addReview(id, req.user._id, { rating, comment });
+        res.status(201).json(review);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.deleteReview = async (req, res) => {
+    try {
+        const { id, reviewId } = req.params;
+        const recipe = await recipeService.deleteReview(id, reviewId, req.user._id, req.user.role);
+        res.json(recipe);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
