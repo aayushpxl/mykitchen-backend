@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { getUserProfile } = require("../controllers/recipe.controller"); // Temporarily using recipe controller since logic is there
+const { searchUsers } = require("../controllers/userController");
 
+router.get("/search", searchUsers);
 router.get("/:userId/profile", getUserProfile);
 
 // @desc    Get User By ID
