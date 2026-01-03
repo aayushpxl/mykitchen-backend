@@ -13,6 +13,12 @@ const challengeSchema = new mongoose.Schema(
       required: true
     },
 
+    difficulty: {
+      type: String,
+      enum: ["Easy", "Medium", "Hard"],
+      default: "Medium"
+    },
+
     recipe: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Recipe",

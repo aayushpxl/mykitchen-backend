@@ -37,6 +37,20 @@ const UserSchema = new mongoose.Schema(
     profilePic: {
       type: String
     },
+    points: {
+      type: Number,
+      default: 0
+    },
+    badges: [
+      {
+        name: String,
+        icon: String,
+        earnedAt: {
+          type: Date,
+          default: Date.now
+        }
+      }
+    ],
     savedRecipes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }]
   },
   { timestamps: true }

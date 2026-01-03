@@ -54,7 +54,9 @@ exports.login = async (req, res) => {
       bio: user.bio,
       location: user.location,
       profilePic: user.profilePic,
-      savedRecipes: user.savedRecipes || []
+      savedRecipes: user.savedRecipes || [],
+      points: user.points || 0,
+      badges: user.badges || []
     };
 
     res.json({
@@ -86,7 +88,9 @@ exports.getMe = (req, res) => {
       bio: user.bio,
       location: user.location,
       profilePic: user.profilePic,
-      savedRecipes: user.savedRecipes || []
+      savedRecipes: user.savedRecipes || [],
+      points: user.points || 0,
+      badges: user.badges || []
     }
   });
 };
@@ -140,8 +144,11 @@ exports.updateProfile = async (req, res) => {
         phoneNumber: user.phoneNumber,
         bio: user.bio,
         location: user.location,
+        location: user.location,
         profilePic: user.profilePic,
-        savedRecipes: user.savedRecipes || []
+        savedRecipes: user.savedRecipes || [],
+        points: user.points || 0,
+        badges: user.badges || []
       }
     });
   } catch (error) {
