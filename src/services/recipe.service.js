@@ -31,7 +31,7 @@ const getAllRecipes = async (user, filters = {}) => {
 
     let q = Recipe.find(query)
         .populate("createdBy", "username")
-        .populate("reviews.user", "username profileImage")
+        .populate("reviews.user", "username profilePic bio")
         .sort({ createdAt: -1 });
 
     if (filters.limit) {
@@ -44,8 +44,8 @@ const getAllRecipes = async (user, filters = {}) => {
 // Get recipes by ID
 const getRecipeById = async (id, user) => {
     const recipe = await Recipe.findById(id)
-        .populate("createdBy", "username profileImage")
-        .populate("reviews.user", "username profileImage");
+        .populate("createdBy", "username profilePic bio")
+        .populate("reviews.user", "username profilePic bio");
     if (!recipe) throw new Error("Recipe not found");
 
     // Allow access if:
@@ -189,8 +189,8 @@ const addReview = async (recipeId, userId, { rating, comment }) => {
     await recipe.save();
 
     return await Recipe.findById(recipeId)
-        .populate("createdBy", "username profileImage")
-        .populate("reviews.user", "username profileImage");
+        .populate("createdBy", "username profilePic bio")
+        .populate("reviews.user", "username profilePic bio");
 };
 
 const deleteReview = async (recipeId, reviewId, userId, userRole) => {
@@ -209,8 +209,8 @@ const deleteReview = async (recipeId, reviewId, userId, userRole) => {
     await recipe.save();
 
     return await Recipe.findById(recipeId)
-        .populate("createdBy", "username profileImage")
-        .populate("reviews.user", "username profileImage");
+        .populate("createdBy", "username profilePic bio")
+        .populate("reviews.user", "username profilePic bio");
 };
 
 module.exports = {
