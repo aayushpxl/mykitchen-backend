@@ -77,6 +77,16 @@ exports.joinChallenge = async (req, res) => {
   try {
     const { challengeId } = req.params;
 
+    // Check if challenge exists and is not expired
+    const challenge = await Challenge.findById(challengeId);
+    if (!challenge) {
+      return res.status(404).json({ message: "Challenge not found" });
+    }
+
+    if (challenge.endDate && new Date(challenge.endDate) < new Date()) {
+      return res.status(400).json({ message: "This challenge has expired and cannot be joined." });
+    }
+
     const join = await UserChallenge.create({
       user: req.user.id,
       challenge: challengeId

@@ -118,8 +118,120 @@ const getUserById = async (req, res) => {
     }
 };
 
+// @desc    Get Admin Dashboard Analytics (Time-series data)
+// @route   GET /api/admin/analytics
+// @access  Private/Admin
+const getDashboardAnalytics = async (req, res) => {
+    try {
+        // Last 7 days user growth
+        const last7Days = [...Array(7)].map((_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }).reverse();
+
+        const userGrowth = await Promise.all(last7Days.map(async (date) => {
+            const nextDate = new Date(date);
+            nextDate.setDate(date.getDate() + 1);
+
+            const count = await User.countDocuments({
+                createdAt: { $gte: date, $lt: nextDate },
+                role: 'normal'
+            });
+
+            return {
+                date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                users: count
+            };
+        }));
+
+        // Category distribution for recipes
+        const categories = await Recipe.aggregate([
+            { $group: { _id: "$category", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 5 }
+        ]);
+
+        const recipeStats = categories.map(cat => ({
+            name: cat._id || 'Other',
+            value: cat.count
+        }));
+
+        res.status(200).json({
+            success: true,
+            data: {
+                userGrowth,
+                recipeStats
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching admin analytics:", error);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
+// @desc    Get Recent Activity Logs
+// @route   GET /api/admin/recent-activity
+// @access  Private/Admin
+const getRecentActivity = async (req, res) => {
+    try {
+        // Fetch recent users
+        const recentUsers = await User.find({ role: 'normal' })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .select('username profilePic createdAt');
+
+        // Fetch recent recipes
+        const recentRecipes = await Recipe.find()
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .populate('createdBy', 'username profilePic');
+
+        // Map into a unified activity feed
+        const activities = [
+            ...recentUsers.map(u => ({
+                id: u._id,
+                type: 'user_joined',
+                title: 'New User Joined',
+                description: `${u.username} created an account`,
+                time: u.createdAt,
+                user: {
+                    username: u.username,
+                    profilePic: u.profilePic
+                }
+            })),
+            ...recentRecipes.map(r => ({
+                id: r._id,
+                type: 'recipe_added',
+                title: 'New Recipe Added',
+                description: `${r.createdBy?.username || 'Unknown User'} added "${r.title}"`,
+                time: r.createdAt,
+                user: {
+                    username: r.createdBy?.username,
+                    profilePic: r.createdBy?.profilePic
+                },
+                metadata: {
+                    recipeId: r._id,
+                    recipeTitle: r.title
+                }
+            }))
+        ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
+
+        res.status(200).json({
+            success: true,
+            data: activities
+        });
+    } catch (error) {
+        console.error("Error fetching recent activity:", error);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
 module.exports = {
     getDashboardStats,
     getAllUsers,
-    getUserById
+    getUserById,
+    getDashboardAnalytics,
+    getRecentActivity
 };
