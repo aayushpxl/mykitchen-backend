@@ -13,6 +13,12 @@ const challengeSchema = new mongoose.Schema(
       required: true
     },
 
+    category: {
+      type: String,
+      required: true,
+      default: "Cooking"
+    },
+
     difficulty: {
       type: String,
       enum: ["Easy", "Medium", "Hard"],

@@ -3,18 +3,20 @@ const User = require("../models/User");
 
 // OPTIONAL AUTH (Guest or User)
 const optionalAuth = async (req, res, next) => {
-  const token = req.header("Authorization")?.replace("Bearer ", "");
-  if (!token) {
+  const authHeader = req.header("Authorization");
+
+  if (!authHeader) {
     req.user = null;
     return next();
   }
+
+  const token = authHeader.replace(/^[Bb]earer\s+/, "");
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
     req.user = await User.findById(decoded.id).select("-password");
     next();
   } catch (error) {
-    // If token invalid, treat as guest
     req.user = null;
     next();
   }

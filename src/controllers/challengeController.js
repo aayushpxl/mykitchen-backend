@@ -13,6 +13,12 @@ exports.createChallenge = async (req, res) => {
       createdBy: req.user.id
     });
 
+    const { getIO } = require("../socket");
+    getIO().emit("new_challenge", {
+      title: challenge.title,
+      id: challenge._id
+    });
+
     res.status(201).json(challenge);
   } catch (error) {
     res.status(500).json({ message: "Failed to create challenge" });

@@ -56,7 +56,8 @@ exports.login = async (req, res) => {
       profilePic: user.profilePic,
       savedRecipes: user.savedRecipes || [],
       points: user.points || 0,
-      badges: user.badges || []
+      badges: user.badges || [],
+      interests: user.interests || []
     };
 
     res.json({
@@ -90,7 +91,8 @@ exports.getMe = (req, res) => {
       profilePic: user.profilePic,
       savedRecipes: user.savedRecipes || [],
       points: user.points || 0,
-      badges: user.badges || []
+      badges: user.badges || [],
+      interests: user.interests || []
     }
   });
 };
@@ -99,7 +101,7 @@ exports.getMe = (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { username, email, phoneNumber, bio, location } = req.body;
+    const { username, email, phoneNumber, bio, location, interests } = req.body;
 
     console.log("Update profile request for user:", userId);
     console.log("Body fields:", { username, email, phoneNumber, bio, location });
@@ -125,6 +127,9 @@ exports.updateProfile = async (req, res) => {
     if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
     if (bio !== undefined) user.bio = bio;
     if (location !== undefined) user.location = location;
+    if (interests !== undefined) {
+      user.interests = Array.isArray(interests) ? interests : JSON.parse(interests);
+    }
 
     // Update profile pic if file uploaded
     if (req.file) {
@@ -148,7 +153,8 @@ exports.updateProfile = async (req, res) => {
         profilePic: user.profilePic,
         savedRecipes: user.savedRecipes || [],
         points: user.points || 0,
-        badges: user.badges || []
+        badges: user.badges || [],
+        interests: user.interests || []
       }
     });
   } catch (error) {

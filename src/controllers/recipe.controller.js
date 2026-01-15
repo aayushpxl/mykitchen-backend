@@ -60,6 +60,17 @@ exports.createRecipe = async (req, res) => {
         }
 
         const recipe = await recipeService.createRecipe(validation.data, req.user);
+
+        // Broadcast notification if approved (public)
+        if (recipe.status === 'approved') {
+            const { getIO } = require("../socket");
+            getIO().emit("new_recipe", {
+                title: recipe.title,
+                chef: req.user.username,
+                id: recipe._id
+            });
+        }
+
         res.status(201).json(recipe);
     } catch (error) {
         console.error("Create Recipe Error:", error);

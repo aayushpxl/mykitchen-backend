@@ -10,10 +10,8 @@ const getAllRecipes = async (user, filters = {}) => {
         if (filters.status) {
             query.status = filters.status;
         } else {
-            delete query.status;
-            if (!filters.status) {
-                query.status = "approved";
-            }
+            // Admin sees all recipes unless a specific status is filtered
+            query = {};
         }
     }
 
@@ -31,14 +29,43 @@ const getAllRecipes = async (user, filters = {}) => {
 
     let q = Recipe.find(query)
         .populate("createdBy", "username")
-        .populate("reviews.user", "username profilePic bio")
-        .sort({ createdAt: -1 });
+        .populate("reviews.user", "username profilePic bio");
 
-    if (filters.limit) {
-        q = q.limit(filters.limit);
+    let results = await q;
+
+    // Recommendation logic: sort by matching interests if user is logged in
+    if (user && user.interests && user.interests.length > 0) {
+        results = results.map(recipe => {
+            const recipeTags = Array.isArray(recipe.tags) ? recipe.tags : [];
+            // Count how many of user interests match this recipe's tags
+            const matchCount = user.interests.filter(interest =>
+                recipeTags.some(tag => typeof tag === 'string' && tag.toLowerCase() === interest.toLowerCase())
+            ).length;
+
+            // Also check if title/category matches for extra relevance
+            const categoryMatch = (recipe.category && typeof recipe.category === 'string' && user.interests.some(interest =>
+                recipe.category.toLowerCase() === interest.toLowerCase()
+            )) ? 1 : 0;
+
+            return { ...recipe.toObject(), relevanceScore: matchCount + categoryMatch };
+        }).sort((a, b) => {
+            // Priority 1: Relevance Score
+            if (b.relevanceScore !== a.relevanceScore) {
+                return b.relevanceScore - a.relevanceScore;
+            }
+            // Priority 2: Creation Date
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+    } else {
+        // Default sort by date
+        results = results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
-    return await q;
+    if (filters.limit) {
+        results = results.slice(0, filters.limit);
+    }
+
+    return results;
 };
 
 // Get recipes by ID

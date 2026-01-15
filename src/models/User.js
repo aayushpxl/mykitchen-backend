@@ -51,7 +51,8 @@ const UserSchema = new mongoose.Schema(
         }
       }
     ],
-    savedRecipes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }]
+    savedRecipes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }],
+    interests: [{ type: String }]
   },
   { timestamps: true }
 );
