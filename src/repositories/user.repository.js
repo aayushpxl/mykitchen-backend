@@ -17,6 +17,10 @@ class UserRepository {
     async findById(id) {
         return await User.findById(id);
     }
+
+    async update(user) {
+        return await user.save();
+    }
 }
 
 module.exports = new UserRepository();

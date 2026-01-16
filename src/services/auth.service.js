@@ -54,6 +54,53 @@ class AuthService {
 
         return { user, token };
     }
+
+    async forgotPassword(email) {
+        const user = await userRepository.findByEmail(email);
+        if (!user) throw new Error("If an account exists for this email, you will receive an OTP.");
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Set expiry (10 minutes)
+        const expiry = new Date(Date.now() + 10 * 60 * 1000);
+
+        user.resetOtp = otp;
+        user.resetOtpExpire = expiry;
+        await userRepository.update(user);
+
+        // Send Email
+        const { sendOtpEmail } = require("../utils/email.utils");
+        await sendOtpEmail(email, otp);
+
+        return true;
+    }
+
+    async verifyOTP(email, otp) {
+        const user = await userRepository.findByEmail(email);
+        if (!user || user.resetOtp !== otp || user.resetOtpExpire < Date.now()) {
+            throw new Error("Invalid or expired OTP");
+        }
+        return true;
+    }
+
+    async resetPassword(email, otp, newPassword) {
+        const user = await userRepository.findByEmail(email);
+        if (!user || user.resetOtp !== otp || user.resetOtpExpire < Date.now()) {
+            throw new Error("Invalid or expired OTP");
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+
+        // Clear OTP fields
+        user.resetOtp = undefined;
+        user.resetOtpExpire = undefined;
+
+        await userRepository.update(user);
+        return true;
+    }
 }
 
 module.exports = new AuthService();

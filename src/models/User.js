@@ -52,7 +52,13 @@ const UserSchema = new mongoose.Schema(
       }
     ],
     savedRecipes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }],
-    interests: [{ type: String }]
+    interests: [{ type: String }],
+    resetOtp: {
+      type: String
+    },
+    resetOtpExpire: {
+      type: Date
+    }
   },
   { timestamps: true }
 );

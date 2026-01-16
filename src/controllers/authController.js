@@ -166,3 +166,45 @@ exports.updateProfile = async (req, res) => {
     });
   }
 };
+
+// FORGOT PASSWORD
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    await authService.forgotPassword(email);
+    res.json({ success: true, message: "If an account exists, an OTP has been sent." });
+  } catch (error) {
+    console.error("Forgot Password Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// VERIFY OTP
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: "Email and OTP are required" });
+
+    await authService.verifyOTP(email, otp);
+    res.json({ success: true, message: "OTP verified successfully" });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// RESET PASSWORD
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: "Email, OTP, and new password are required" });
+    }
+
+    await authService.resetPassword(email, otp, newPassword);
+    res.json({ success: true, message: "Password reset successfully" });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
