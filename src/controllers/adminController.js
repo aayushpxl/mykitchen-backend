@@ -228,10 +228,49 @@ const getRecentActivity = async (req, res) => {
     }
 };
 
+// @desc    Toggle Ban Status of a User
+// @route   PUT /api/admin/users/:id/ban
+// @access  Private/Admin
+const toggleBanUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (user.role === 'admin') {
+            return res.status(403).json({ message: "Cannot ban an admin" });
+        }
+
+        // Toggle ban status
+        user.isBanned = !user.isBanned;
+
+        // If banning, also set isActive to false to be safe (though login block handles it)
+        // If unbanning, we can leave isActive as is, or set to true (let's set true to auto-activate)
+        if (user.isBanned) {
+            user.isActive = false;
+        } else {
+            user.isActive = true;
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: `User ${user.isBanned ? 'banned' : 'unbanned'} successfully`,
+            data: { isBanned: user.isBanned, isActive: user.isActive }
+        });
+    } catch (error) {
+        console.error("Error banning user:", error);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
 module.exports = {
     getDashboardStats,
     getAllUsers,
     getUserById,
     getDashboardAnalytics,
-    getRecentActivity
+    getRecentActivity,
+    toggleBanUser
 };

@@ -39,6 +39,10 @@ class AuthService {
             throw new Error("Invalid credentials");
         }
 
+        if (user.isBanned) {
+            throw new Error("You have been banned for violating the community guidelines.");
+        }
+
         if (user.isActive === false) {
             // Reactivate account
             user.isActive = true;

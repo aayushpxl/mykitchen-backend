@@ -4,7 +4,8 @@ const {
     getDashboardStats,
     getAllUsers,
     getDashboardAnalytics,
-    getRecentActivity
+    getRecentActivity,
+    toggleBanUser
 } = require("../controllers/adminController");
 const { authenticateUser, isAdmin } = require("../middlewares/authMiddleware");
 
@@ -16,5 +17,6 @@ router.get("/stats", getDashboardStats);
 router.get("/analytics", getDashboardAnalytics);
 router.get("/recent-activity", getRecentActivity);
 router.get("/users", getAllUsers);
+router.put("/users/:id/ban", toggleBanUser);
 
 module.exports = router;
