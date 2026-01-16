@@ -25,3 +25,20 @@ exports.searchUsers = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+// @desc    Deactivate user account
+// @route   PUT /api/users/deactivate
+// @access  Private
+exports.deactivateAccount = async (req, res) => {
+    try {
+        const userId = req.user.id; // From auth middleware
+
+        // Use findByIdAndUpdate for atomic update
+        await User.findByIdAndUpdate(userId, { isActive: false });
+
+        res.json({ message: "Account deactivated successfully" });
+    } catch (error) {
+        console.error("Deactivate Account Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};

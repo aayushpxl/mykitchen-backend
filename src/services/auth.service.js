@@ -39,6 +39,12 @@ class AuthService {
             throw new Error("Invalid credentials");
         }
 
+        if (user.isActive === false) {
+            // Reactivate account
+            user.isActive = true;
+            await userRepository.update(user);
+        }
+
         // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {

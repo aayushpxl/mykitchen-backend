@@ -99,6 +99,10 @@ const getPublicUserProfile = async (userId) => {
     const user = await User.findById(userId).select("-password -email"); // Sensitive data exclusion (keep role, bio, location, etc.)
     if (!user) throw new Error("User not found");
 
+    if (user.isActive === false) {
+        throw new Error("User account is deactivated");
+    }
+
     // Only show APPROVED recipes on public profile
     const recipes = await Recipe.find({ createdBy: userId, status: 'approved' }).sort({ createdAt: -1 });
 
