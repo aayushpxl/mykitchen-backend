@@ -7,6 +7,7 @@ const recipeRoutes = require("./routes/recipeRoutes");
 const challengeRoutes = require("./routes/challengeRoutes");
 const mealPlanRoutes = require("./routes/mealplannerRoute");
 const adminRoutes = require("./routes/adminRoutes");
+const generalRoutes = require("./routes/generalRoutes");
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/challenges", challengeRoutes);
 app.use("/api/meal-plans", mealPlanRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/general", generalRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
